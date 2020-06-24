@@ -1,3 +1,5 @@
+# Junk file used to just test and break stuff
+
 # Render Tile takes the rows and columns and multiples them by yhe tile size to generate a tile.
 # def render_tile args, row, col, *color
 #     args.outputs.solids << [(row * args.state.tile_size),  (col * args.state.tile_size), args.state.tile_size, args.state.tile_size, [0, 0, 0, 255]]
