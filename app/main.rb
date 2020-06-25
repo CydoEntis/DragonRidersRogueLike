@@ -1,12 +1,76 @@
+# Temp place for classes.
+class Tile
+    def initialize x, y, sprite, solid
+        @x = x
+        @y = y
+        @sprite = sprite
+        @solid = solid
+    end
+
+    def serialize 
+        { }
+    end
+
+    def inspect 
+        seriealize.to_s
+    end
+
+    def to_s
+        serialize.to_s
+    end
+
+    def render_tile args
+        args.outputs.sprites << [@x * 80, @y * 80, 80, 80, @sprite]
+    end
+end
+
+class Floor < Tile
+    def initialize x, y
+        super(x, y, "images/grass.png", true)
+    end
+
+    def serialize 
+        { }
+    end
+
+    def inspect 
+        seriealize.to_s
+    end
+
+    def to_s
+        serialize.to_s
+    end
+end
+
+class Wall < Tile
+    def initialize x, y
+        super(x, y, "images/water-secondary.png", false)
+    end
+
+    def serialize 
+        { }
+    end
+
+    def inspect 
+        seriealize.to_s
+    end
+
+    def to_s
+        serialize.to_s
+    end
+end
+
 def init args 
     args.state.grid = []
     args.state.tile_size ||= 80
-    args.state.rows ||= 9
-    args.state.cols ||= 9
+    args.state.grid_size ||= 9
     args.state.player_x ||= 0
     args.state.player_y ||= 0
-    args.state.tiles ||= [];
-    setup_grid args
+    setup_level args
+
+    render_background args  
+    setup_level args
+    # setup_grid args
 end
 
 def player_controller args
@@ -26,6 +90,7 @@ def player_controller args
         args.state.player_x += 80
     end
 
+    # Render the player.
     render_sprite args, args.state.player_x, args.state.player_y, "images/barbarian.png"
 end
 
@@ -34,47 +99,46 @@ def render_sprite args, x, y, sprite
 end
 
 # Setup the initialize grid
-def setup_grid args
-    args.state.grid = args.state.grid_size.map do 
-        args.state.grid_size.map { 0 } 
-    end
-end
-
-
-def checkInBounds args, x, y
-    return x > 0 && y > 0 && x < args.state.rows - 1 && y < args.state.columns - 1;
-end
+# def setup_grid args
+#     args.state.grid = args.state.grid_size.map do 
+#         args.state.grid_size.map { 0 } 
+#     end
+# end
 
 def generate_tiles args
-    for i in 0..args.state.rows do
+    for i in 0..args.state.grid_size do
         args.state.tiles[i] = []
-        for j in 0..args.state.columns do
-            if rand(0) < 0.3 || !checkInBounds(args, i, j)
-                args.state.tiles[i][j] = new Wall(i, j)
+        for j in 0..args.state.grid_size do
+            if rand(0) < 0.3 || !in_bounds(args, i, j)
+                args.state.tiles[i][j] = Wall.new(i, j)
             else
-                args.state.tiles[i][j] = new Floor(i, j)
+                args.state.tiles[i][j] = Floor.new(i, j)
             end
         end
     end
 end
 
-def create_level args
-    generate_tiles(args)
-    render_level(args)
+def setup_level args
+    generate_tiles args
+    render_level args
+end
+
+def in_bounds args, x, y
+    return x > 0 && y > 0 && x < args.state.grid_size - 1 && y < args.state.grid_size - 1;
 end
 
 def get_tile args, x, y 
-    if(checkInBounds(x, y))
+    if(in_bounds(args, x, y))
         return args.state.tiles[x][y]
     else
-        return new Wall(x, y)
+        return Wall.new(x, y)
     end
 end
 
 def render_level args
-    for i in 0..args.state.rows do
-        for j in 0..args.state.columns do
-            get_tile(args, i, j).render_sprite(args)
+    for i in 0..args.state.grid_size do
+        for j in 0..args.state.grid_size do
+            get_tile(args, i, j).render_tile(args)
         end
     end
 end
@@ -85,37 +149,14 @@ def render_background args
     args.outputs.solids << [0, 0, 1280, 720, 255, 250, 240, 255]
 end
 
+
+
+
 # Main part of the program
 def tick args
     init args
-    render_background args
-    create_level args
+    setup_level args
     player_controller args
 end
 
 
-# Temp place for classes.
-class Tile
-    def initialize x, y, sprite, solid
-        @x = x
-        @y = y
-        @sprite = sprite
-        @solid = solid
-    end
-
-    def render_sprite args
-        args.outputs.sprites << [self.x, self.y, 64, 64, self.sprite]
-    end
-end
-
-class Floor
-    def initialize x, y
-        super(x, y, "images/grass.png", true)
-    end
-end
-
-class Wall 
-    def initialize x, y
-        super(x, y, "images/water.png", false)
-    end
-end
