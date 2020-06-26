@@ -1,64 +1,7 @@
-# Temp place for classes.
-class Tile
-    def initialize x, y, sprite, solid
-        @x = x
-        @y = y
-        @sprite = sprite
-        @solid = solid
-    end
+require 'lib/tile.rb'
+require 'lib/floor.rb'
+require 'lib/wall.rb'
 
-    def serialize 
-        { }
-    end
-
-    def inspect 
-        seriealize.to_s
-    end
-
-    def to_s
-        serialize.to_s
-    end
-
-    def render_tile args
-        args.outputs.sprites << [@x * 80, @y * 80, 80, 80, @sprite]
-    end
-end
-
-class Floor < Tile
-    def initialize x, y
-        super(x, y, "images/grass.png", true)
-    end
-
-    def serialize 
-        { }
-    end
-
-    def inspect 
-        seriealize.to_s
-    end
-
-    def to_s
-        serialize.to_s
-    end
-end
-
-class Wall < Tile
-    def initialize x, y
-        super(x, y, "images/water-secondary.png", false)
-    end
-
-    def serialize 
-        { }
-    end
-
-    def inspect 
-        seriealize.to_s
-    end
-
-    def to_s
-        serialize.to_s
-    end
-end
 
 class Game 
     def initialize args
@@ -115,7 +58,29 @@ class Game
 
     def setup_level args
         generate_tiles args
-        
+    end
+
+    def tryTo(callback)
+        for i in 1000..0 do
+            if callback()
+                return
+            end
+        end
+    end
+
+    def randomRange(min, max)
+        return rand().floor() * (max * min + 1) + min
+    end
+
+    def findPassableTile
+        args.state.tile
+        tryTo(function = -> {
+            args.state.x = randomRange(0, grid_size - 1)
+            args.state.y = randomRange(0, grid_size - 1)
+            args.state.tile = get_tile(x, y)
+            return tile.solid # && !tile.monster
+        })
+        return tile
     end
 
     def tick args
@@ -124,14 +89,10 @@ class Game
 end
 
 def init args 
-    # args.state.grid = []
     args.state.tile_size ||= 80
     args.state.grid_size ||= 9
     args.state.player_x ||= 0
     args.state.player_y ||= 0
-
-    # render_background args  
-    # setup_grid args
 end
 
 def player_controller args
@@ -171,5 +132,3 @@ def tick args
     init args
     player_controller args
 end
-
-
