@@ -1,98 +1,13 @@
-require 'lib/tile.rb'
-require 'lib/floor.rb'
-require 'lib/wall.rb'
-
-
-class Game 
-    def initialize args
-        args.state.grid = []
-        args.state.tile_size ||= 80
-        args.state.grid_size ||= 9
-        setup_level(args)
-    end
-
-    def serialize 
-        { }
-    end
-
-    def inspect 
-        seriealize.to_s
-    end
-
-    def to_s
-        serialize.to_s
-    end
-
-    def generate_tiles args
-        for i in 0..args.state.grid_size do
-            args.state.tiles[i] = []
-            for j in 0..args.state.grid_size do
-                if rand(0) < 0.3 || !in_bounds(args, i, j)
-                    args.state.tiles[i][j] = Wall.new(i, j)
-                else
-                    args.state.tiles[i][j] = Floor.new(i, j)
-                end
-            end
-        end
-    end
-    
-    def in_bounds args, x, y
-        return x > 0 && y > 0 && x < args.state.grid_size - 1 && y < args.state.grid_size - 1;
-    end
-    
-    def get_tile args, x, y 
-        if(in_bounds(args, x, y))
-            return args.state.tiles[x][y]
-        else
-            return Wall.new(x, y)
-        end
-    end
-    
-    def render_level args
-        for i in 0..args.state.grid_size do
-            for j in 0..args.state.grid_size do
-                get_tile(args, i, j).render_tile(args)
-            end
-        end
-    end
-
-    def setup_level args
-        generate_tiles args
-    end
-
-    def tryTo(callback)
-        for i in 1000..0 do
-            if callback()
-                return
-            end
-        end
-    end
-
-    def randomRange(min, max)
-        return rand().floor() * (max * min + 1) + min
-    end
-
-    def findPassableTile
-        args.state.tile
-        tryTo(function = -> {
-            args.state.x = randomRange(0, grid_size - 1)
-            args.state.y = randomRange(0, grid_size - 1)
-            args.state.tile = get_tile(x, y)
-            return tile.solid # && !tile.monster
-        })
-        return tile
-    end
-
-    def tick args
-        render_level args
-    end
-end
+require "lib/map.rb"
 
 def init args 
     args.state.tile_size ||= 80
     args.state.grid_size ||= 9
-    args.state.player_x ||= 0
-    args.state.player_y ||= 0
+    args.state.game ||= Map.new(args)
+    args.state.game.tick(args)
+    # args.state.player_pos = args.state.game.find_random_tile
+    args.state.player_x ||= 320
+    args.state.player_y ||= 320
 end
 
 def player_controller args
@@ -127,8 +42,6 @@ end
 
 # Main part of the program
 def tick args
-    args.state.game ||= Game.new(args)
-    args.state.game.tick(args)
     init args
     player_controller args
 end
