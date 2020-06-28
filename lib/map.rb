@@ -1,10 +1,14 @@
 require 'lib/tile.rb'
 require 'lib/floor.rb'
 require 'lib/wall.rb'
+require 'lib/player.rb'
 
 class Map 
+    attr_accessor :position, :player
     def initialize args
         setup_level(args)
+        @position = passable_tile args
+        @player = Player.new(position.x, position.y,  "images/barbarian.png")
     end
 
     def serialize 
@@ -12,14 +16,19 @@ class Map
     end
 
     def inspect 
-        seriealize.to_s
+        serialize.to_s
     end
 
     def to_s
         serialize.to_s
     end
 
+    def check_for_connected_tiles
+            return generate_tiles == passable_tile.get_connected_tiles.length 
+    end
+
     def generate_tiles args
+        solid_tiles = 0
         for i in 0..args.state.grid_size do
             args.state.tiles[i] = []
             for j in 0..args.state.grid_size do
@@ -27,9 +36,11 @@ class Map
                     args.state.tiles[i][j] = Wall.new(i, j)
                 else
                     args.state.tiles[i][j] = Floor.new(i, j)
+                    solid_tiles += 1
                 end
             end
         end
+        return solid_tiles
     end
     
     def in_bounds args, x, y
@@ -53,55 +64,36 @@ class Map
     end
 
     def setup_level args
+        # ! W.e this shit is doesn't work :)
+        # check_for_connected_tiles
         generate_tiles args
     end
-
-    def random_range(min, max)
-        return rand(max - min + 1) + min
+ 
+    # Finds a random tile and returns its.
+    def random_tile args
+        x = random_range(0, args.state.grid_size - 1)
+        y = random_range(0, args.state.grid_size - 1)
+        return get_tile(args, x, y)
     end
-
-    # def attempt(callback)
-    #     for i in 0..1000 do
-    #         if(callback())
-    #             return
-    #         end
-    #     end
-    # end
-
-
-    def find_random_tile
-        loop do
-            args.state.x = random_range(0, args.state.grid_size - 1)
-            args.state.y = random_range(0, args.state.grid_size - 1)
-            args.state.tile = get_tile(args.state.x, args.state.y)
-            break if args.state.tile.solid
+    
+    # Keeps checking for a solid tile. Then returns it
+    def passable_tile args
+        tile = random_tile args
+        until tile.solid do
+            tile = random_tile args
         end
+        return tile
+    end
+    
+    # Gets a random range
+    def random_range(min, max)
+        (rand * (max - min + 1) + min).floor
     end
 
-    # def get_passable_tile args
-    #     args.state.tile
-    #     10.times do
-    #         args.state.x = random_range(0, args.state.grid_size - 1)
-    #         args.state.y = random_range(0, args.state.grid_size - 1)
-    #         args.state.tile = get_tile(args, args.state.x, args.state.y)
-    #         if(args.state.tile.solid)
-    #             return args.state.tile
-    #         end
-    #     end
-    # end
 
-    def find_passable_tile args
-        args.state.tile
-        attempt() {
-            args.state.x = random_range(0, args.state.grid_size - 1)
-            args.state.y = random_range(0, args.state.grid_size - 1)
-            args.state.tile = get_tile(args.state.x, args.state.y)
-            return args.state.tile.solid # && !tile.monster
-        }
-        return args.state.tile
-    end
 
     def tick args
         render_level args
+        @player.player_controller args
     end
 end

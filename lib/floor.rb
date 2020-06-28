@@ -8,7 +8,7 @@ class Floor < Tile
     end
 
     def inspect 
-        seriealize.to_s
+        serialize.to_s
     end
 
     def to_s
